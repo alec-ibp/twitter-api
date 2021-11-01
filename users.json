@@ -1,0 +1,26 @@
+[
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "user@example.com",
+        "password": "123456789",
+        "first_name": "Alejandro",
+        "last_name": "Ibarra",
+        "birthday": "2021-11-01"
+    },
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "email@example.com",
+        "password": "987654321",
+        "first_name": "Carlos",
+        "last_name": "Paz",
+        "birthday": "2021-11-01"
+    },
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "joe@example.com",
+        "password": "joe12345678",
+        "first_name": "Joe",
+        "last_name": "Jackson",
+        "birthday": "2021-11-01"
+    }
+]
