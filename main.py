@@ -77,15 +77,15 @@ class Tweet(BaseModel):
 )
 def sign_up(user: UserRegister = Body(...)):
     """
-    Sign up
+    ## Sign up
 
     This path operation Create a user in the app
 
-    Parameters:
+    ## Parameters:
     - Request Body parameter
         - user: UserRegister
 
-    Returns a json with the basic user information (user model):
+    ## Returns a json with the basic user information (user model):
     - user_id: UUID
     - email: EmailStr
     - first_name: str
@@ -124,7 +124,26 @@ def login():
     tags=["Users"]
 )
 def show_all_users():
-    pass
+    """
+    ## Show all users
+
+    This path operation show all the users in the app
+
+    ## Parameters:
+    
+
+    ## Returns a json list with all the users in the app, with the following keys
+    - user_id: UUID
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birthday: date
+    """
+
+    with open("users.json", "r", encoding='utf-8') as f:
+        results = json.loads(f.read())
+        # fastapi can cast results to json automatically 
+    return results
 
 ### Show a user
 @app.get(
