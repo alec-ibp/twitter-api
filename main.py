@@ -201,8 +201,39 @@ def home():
     summary="Post a Tweet",
     tags=["Tweets"]
 )
-def post_tweet():
-    pass
+def post_tweet(tweet: Tweet = Body(...)):
+    """
+    ## Post a Tweet
+
+    This path operation Create a tweet in the app
+
+    ## Parameters:
+    - Request Body parameter
+        - tweet: Tweet
+
+    ## Returns a json with the tweet information (tweet model):
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: Optional[datetime]
+    - by: User
+    """
+    with open("tweets.json", "r+", encoding='utf-8') as f:
+        results = json.loads(f.read()) # cast str -> json (Dict) this case List[Dicts]
+
+        tweet_dict = tweet.dict()
+        tweet_dict['tweet_id'] = str(tweet_dict['tweet_id']) # manual cast / fastapi can't cast uuid automatically
+        tweet_dict['created_at'] = str(tweet_dict['created_at']) # manual cast / fastapi can't cast date automatically
+        if len(str(tweet_dict['updated_at'])) > 0 :
+            tweet_dict['updated_at'] = str(tweet_dict['updated_at']) # manual cast / fastapi can't cast date automatically
+
+        tweet_dict['by']['user_id'] = str(tweet_dict['by']['user_id'])
+        tweet_dict['by']['birthday'] = str(tweet_dict['by']['birthday'])
+        results.append(tweet_dict)
+        f.seek(0) # start writing at the beginning like overwrite
+        f.write(json.dumps(results))
+
+    return tweet
 
 ### Show a tweet
 @app.get(
