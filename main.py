@@ -92,7 +92,7 @@ def sign_up(user: UserRegister = Body(...)):
     - last_name: str
     - birthday: date
     """
-    update_file(entity='users', body_parameter=user)
+    insert_to_file(entity='users', body_parameter=user)
     return user
 
 ### Login a user
@@ -344,7 +344,7 @@ def post_tweet(tweet: Tweet = Body(...)):
     - updated_at: Optional[datetime]
     - by: User
     """
-    update_file(entity='tweets', body_parameter=tweet)
+    insert_to_file(entity='tweets', body_parameter=tweet)
     return tweet
 
 ### Show a tweet
@@ -395,7 +395,7 @@ def overwrite_file(entity: str, result_list):
     with open(entity + '.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(result_list))
 
-def update_file(entity: str, body_parameter: Tweet):
+def insert_to_file(entity: str, body_parameter: Tweet):
     with open(entity + '.json', 'r+', encoding='utf-8') as f:
         results = json.loads(f.read()) # cast str -> json
         json_dict = body_parameter.dict()
