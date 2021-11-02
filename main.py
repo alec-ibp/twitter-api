@@ -1,8 +1,8 @@
 # Python
 import json
 from uuid import UUID
-from datetime import date, datetime
 from typing import Optional, List
+from datetime import date, datetime
 
 # Pydantic
 from pydantic import BaseModel
@@ -12,8 +12,8 @@ from pydantic import Field
 # fastAPI
 from fastapi import FastAPI
 from fastapi import status
-from fastapi import Body, Path
 from fastapi import HTTPException
+from fastapi import Body, Path, Query
 
 app = FastAPI()
 
@@ -146,8 +146,8 @@ def show_a_user(user_id: str = Path(
     min_length=1,
     title='User id',
     description="this is the user id. Minimum characters: 1"
-    )):
-
+    )
+    ):
     """
     ## Show a user
 
@@ -188,7 +188,8 @@ def delete_a_user(user_id: str = Path(
     min_length=1,
     title='User id',
     description="this is the user id. Minimum characters: 1"
-    )):
+    )
+    ):
     """
     ## Delete a user
 
@@ -198,14 +199,19 @@ def delete_a_user(user_id: str = Path(
     - path parameter:
         - user_id: str
     
-    ## Returns status code 200 OK
+    ## Returns a json list with all the users in the app, with the following keys
+    - user_id: UUID
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birthday: date
     """
     results = read_file(entity='users')
     for user in results:
         if user['user_id'] == user_id:
             results.remove(user)
             overwrite_file(entity='users', result_list=results)
-            return None
+            return user
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -220,9 +226,70 @@ def delete_a_user(user_id: str = Path(
     summary="Update a User",
     tags=["Users"]
 )
-def update_a_user():
-    pass
+def update_a_user(
+    user_id: str = Path(
+    ...,
+    min_length=1,
+    title='User id',
+    description="this is the user id. Minimum characters: 1"
+    ),
+    first_name: str = Query(
+        default=None,
+        min_length=1,
+        max_length=50,
+        title="First name",
+        description="This is the first name of the user, minimum characters: 1"
+    ),
+    last_name: str = Query(
+        default=None,
+        min_length=1,
+        max_length=50,
+        title="Last name",
+        description="This is the last name of the user, minimum characters: 1"
+    ),
+    email: EmailStr = Query(
+        default=None,
+        title="Email",
+        description="This is the email of the user")
+    ):
+    """
+    ## Update a user
 
+    This path operation Update a user
+
+    ## Parameters:
+    - path parameter:
+        - user_id: str
+    - query parameters:
+        - first_name: str
+        - last_name: str
+        -email: EmailStr
+    
+    ## Returns a json list with all the users in the app, with the following keys
+    - user_id: UUID
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birthday: date
+    """
+
+    results = read_file(entity='users')
+    for user in results:
+        if user['user_id'] == user_id:
+            if first_name:
+                user['first_name'] = first_name
+            if last_name:
+                user['last_name'] = last_name
+            if email:
+                user['email'] = email
+            overwrite_file(entity='users', result_list=results)
+            return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user doesn't exist!"
+        )
+    
 ## Tweets paths
 
 ### Show all tweets

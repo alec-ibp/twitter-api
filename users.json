@@ -17,10 +17,10 @@
     },
     {
         "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "email": "user@example.com",
+        "email": "frederick@gmail.com",
         "password": "stringst",
-        "first_name": "string",
-        "last_name": "string",
+        "first_name": "freddy",
+        "last_name": "Paz",
         "birthday": "2021-11-02"
     }
 ]
