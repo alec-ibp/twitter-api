@@ -183,8 +183,34 @@ def show_a_user(user_id: str = Path(
     summary="Delete a User",
     tags=["Users"]
 )
-def delete_a_user():
-    pass
+def delete_a_user(user_id: str = Path(
+    ...,
+    min_length=1,
+    title='User id',
+    description="this is the user id. Minimum characters: 1"
+    )):
+    """
+    ## Delete a user
+
+    This path operation delete a user from the database
+
+    ## Parameters:
+    - path parameter:
+        - user_id: str
+    
+    ## Returns status code 200 OK
+    """
+    results = read_file(entity='users')
+    for user in results:
+        if user['user_id'] == user_id:
+            results.remove(user)
+            overwrite_file(entity='users', result_list=results)
+            return None
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user doesn't exist!"
+        )        
 
 ### Update a user
 @app.put(
@@ -297,6 +323,10 @@ def read_file(entity: str):
     with open(entity + '.json', 'r', encoding='utf-8') as f:
         results = json.loads(f.read())
     return results
+
+def overwrite_file(entity: str, result_list):
+    with open(entity + '.json', 'w', encoding='utf-8') as f:
+        f.write(json.dumps(result_list))
 
 def update_file(entity: str, body_parameter: Tweet):
     with open(entity + '.json', 'r+', encoding='utf-8') as f:
