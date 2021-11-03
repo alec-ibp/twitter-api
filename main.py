@@ -199,7 +199,7 @@ def delete_a_user(user_id: str = Path(
     - path parameter:
         - user_id: str
     
-    ## Returns a json list with all the users in the app, with the following keys
+    ## Returns a json with the following keys
     - user_id: UUID
     - email: EmailStr
     - first_name: str
@@ -265,7 +265,7 @@ def update_a_user(
         - last_name: str
         -email: EmailStr
     
-    ## Returns a json list with all the users in the app, with the following keys
+    ## Returns a json list with the following keys
     - user_id: UUID
     - email: EmailStr
     - first_name: str
@@ -397,8 +397,40 @@ def show_a_tweet(tweet_id: str = Path(
     summary="Delete a Tweet",
     tags=["Tweets"]
 )
-def delete_a_tweet():
-    pass
+def delete_a_tweet(tweet_id: str = Path(
+    ...,
+    min_length=1,
+    title='User id',
+    description="this is the tweet id. Minimum characters: 1"
+    )
+    ):
+    """
+    ## Delete a tweet
+
+    This path operation delete a tweet from the database
+
+    ## Parameters:
+    - path parameter:
+        - tweet_id: str
+    
+    ## Returns a json list with the following keys
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: user
+    """
+    results = read_file(entity='tweets')
+    for tweet in results:
+        if tweet['tweet_id'] == tweet_id:
+            results.remove(tweet)
+            overwrite_file(entity='tweets', result_list=results)
+            return tweet
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This tweet doesn't exist!"
+        )    
 
 ### Update a tweet
 @app.put(
@@ -408,9 +440,52 @@ def delete_a_tweet():
     summary="Update a Tweet",
     tags=["Tweets"]
 )
-def update_a_tweet():
-    pass
+def update_a_tweet(tweet_id: str = Path(
+    ...,
+    min_length=1,
+    title='tweet id',
+    description="this is the tweet id. Minimum characters: 1"
+    ),
+    content: str = Query(
+        default=None,
+        min_length=1,
+        max_length=256,
+        title="Tweet content",
+        description="This is content of the tweet, minimum characters: 1"
+    )):
+    """
+    ## Update a tweet
 
+    This path operation Update a tweet
+
+    ## Parameters:
+    - path parameter:
+        - tweet_id: str
+    - query parameters:
+        - content: str
+    
+    ## Returns a json list following keys
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: user
+    """
+
+    results = read_file(entity='tweets')
+    for tweet in results:
+        if tweet['tweet_id'] == tweet_id:
+            if content:
+                tweet['content'] = content
+            tweet['updated_at'] = str(datetime.now())
+            print(tweet)
+            overwrite_file(entity='tweets', result_list=results)
+            return tweet
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This tweet doesn't exist!"
+        )
 
 def read_file(entity: str):
     with open(entity + '.json', 'r', encoding='utf-8') as f:
