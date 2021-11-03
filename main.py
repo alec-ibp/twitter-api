@@ -356,12 +356,38 @@ def post_tweet(tweet: Tweet = Body(...)):
     tags=["Tweets"]
 )
 def show_a_tweet(tweet_id: str = Path(
-    ...,
+     ...,
     min_length=1,
-    title='Tweet Id',
-    description="This is the tweet id. Minimum characters: 1"
-    )):
-    pass
+    title='Tweet id',
+    description="this is the tweet id. Minimum characters: 1"
+    )
+    ):
+    """
+    ## Show a tweet
+
+    this path parameter show a tweet of the app by the tweet_id (UUID)
+
+    ## Parameters:
+    - path parameter
+        - tweet_id: str
+    
+    ## Returns a json with the basic tweet information (tweet model):
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: user
+    """
+    results = read_file(entity='tweets')
+
+    for tweet in results:
+        if tweet['tweet_id'] == tweet_id:
+            return tweet
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="This tweet doesn't exist!"
+        )
 
 ### Delete a tweet
 @app.delete(

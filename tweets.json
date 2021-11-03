@@ -5,7 +5,7 @@
         "created_at": "2021-11-01 19:09:38.706407",
         "updated_at": "2021-11-02 00:10:37.588000+00:00",
         "by": {
-            "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
             "email": "user@example.com",
             "first_name": "Alejandro",
             "last_name": "Ibarra",
@@ -13,7 +13,7 @@
         }
     },
     {
-        "tweet_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "tweet_id": "3fa85f64-5717-4562-b3fc-2c963f66afa8",
         "content": "This is my first tweet",
         "created_at": "2021-11-01 19:09:38.706407",
         "updated_at": "2021-11-02 00:10:37.588000+00:00",
@@ -26,7 +26,7 @@
         }
     },
     {
-        "tweet_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "tweet_id": "3fa85f64-5717-4562-b3fc-2c963f66afa9",
         "content": "this is my second tweet",
         "created_at": "2021-11-02 07:52:21.731696",
         "updated_at": "2021-11-02 12:58:11.421000+00:00",
