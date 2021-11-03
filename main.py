@@ -233,21 +233,21 @@ def update_a_user(
     title='User id',
     description="this is the user id. Minimum characters: 1"
     ),
-    first_name: str = Query(
+    first_name: Optional[str] = Query(
         default=None,
         min_length=1,
         max_length=50,
         title="First name",
         description="This is the first name of the user, minimum characters: 1"
     ),
-    last_name: str = Query(
+    last_name: Optional[str] = Query(
         default=None,
         min_length=1,
         max_length=50,
         title="Last name",
         description="This is the last name of the user, minimum characters: 1"
     ),
-    email: EmailStr = Query(
+    email: Optional[EmailStr] = Query(
         default=None,
         title="Email",
         description="This is the email of the user")
@@ -446,7 +446,7 @@ def update_a_tweet(tweet_id: str = Path(
     title='tweet id',
     description="this is the tweet id. Minimum characters: 1"
     ),
-    content: str = Query(
+    content: Optional[str] = Query(
         default=None,
         min_length=1,
         max_length=256,
