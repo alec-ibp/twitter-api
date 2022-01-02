@@ -1,16 +1,14 @@
 # Python
 import json
-from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
 
 # Path
 from models.user_api_model import User, UserRegister
+from models.tweet_api_model import Tweet
 
 # Pydantic
-from pydantic import BaseModel
 from pydantic import EmailStr
-from pydantic import Field
 
 # fastAPI
 from fastapi import FastAPI
@@ -21,18 +19,6 @@ from fastapi import Body, Path, Query
 app = FastAPI()
 
 #Models
-class Tweet(BaseModel):
-    tweet_id: UUID = Field(...)
-    content: str = Field(
-        ...,
-        min_length=1,
-        max_length=256
-    )
-    created_at: datetime = Field(default=datetime.now())
-    updated_at: Optional[datetime] = Field(default=None)
-    # author
-    by: User = Field(...)
-    
 
 # Path operations
 
