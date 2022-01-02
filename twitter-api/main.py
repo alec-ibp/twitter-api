@@ -2,7 +2,10 @@
 import json
 from uuid import UUID
 from typing import Optional, List
-from datetime import date, datetime
+from datetime import datetime
+
+# Path
+from models.user_api_model import User, UserRegister
 
 # Pydantic
 from pydantic import BaseModel
@@ -18,38 +21,6 @@ from fastapi import Body, Path, Query
 app = FastAPI()
 
 #Models
-class UserBase(BaseModel):
-    # unique identifier 
-    user_id: UUID = Field(...)
-    email: EmailStr = Field(...)
-
-
-class UserLogin(UserBase):
-    password: str = Field(
-        ...,
-        min_length=8,
-        max_length=64
-    )
-
-
-class User(UserBase):
-    first_name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50
-    )
-    last_name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50
-    )
-    birthday: Optional[date] = Field(default=None)
-
-
-class UserRegister(User, UserLogin):
-    pass
-
-
 class Tweet(BaseModel):
     tweet_id: UUID = Field(...)
     content: str = Field(
