@@ -7,6 +7,8 @@ from datetime import datetime
 from models.user_api_model import User, UserRegister
 from models.tweet_api_model import Tweet
 
+from database import Base, engine
+
 # Pydantic
 from pydantic import EmailStr
 
@@ -16,6 +18,8 @@ from fastapi import status
 from fastapi import HTTPException
 from fastapi import Body, Path, Query
 
+
+Base.metadata.create_all(engine)
 app = FastAPI()
 
 #Models
