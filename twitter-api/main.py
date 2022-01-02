@@ -315,7 +315,7 @@ def home():
     - updated_at: Optional[datetime]
     - by: User
     """
-    with open("tweets.json",'r',encoding='utf-8') as f:
+    with open("repository/tweets.json",'r',encoding='utf-8') as f:
         results = json.loads(f.read())
     return results
 
@@ -488,16 +488,16 @@ def update_a_tweet(tweet_id: str = Path(
         )
 
 def read_file(entity: str):
-    with open(entity + '.json', 'r', encoding='utf-8') as f:
+    with open("repository/" + entity + '.json', 'r', encoding='utf-8') as f:
         results = json.loads(f.read())
     return results
 
 def overwrite_file(entity: str, result_list):
-    with open(entity + '.json', 'w', encoding='utf-8') as f:
+    with open("repository/" + entity + '.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(result_list))
 
 def insert_to_file(entity: str, body_parameter: Tweet):
-    with open(entity + '.json', 'r+', encoding='utf-8') as f:
+    with open("repository/" + entity + '.json', 'r+', encoding='utf-8') as f:
         results = json.loads(f.read()) # cast str -> json
         json_dict = body_parameter.dict()
         
