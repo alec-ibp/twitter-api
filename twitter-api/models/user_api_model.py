@@ -1,5 +1,4 @@
 # Python
-from uuid import UUID
 from typing import Optional
 from datetime import date
 
@@ -9,9 +8,10 @@ from pydantic import EmailStr
 from pydantic import Field
 
 class UserBase(BaseModel):
-    # unique identifier 
-    user_id: UUID = Field(...)
     email: EmailStr = Field(...)
+
+    class Config():
+        orm_mode = True
 
 
 class UserLogin(UserBase):
@@ -38,3 +38,5 @@ class User(UserBase):
 
 class UserRegister(User, UserLogin):
     pass
+
+ 

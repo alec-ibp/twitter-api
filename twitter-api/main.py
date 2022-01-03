@@ -6,14 +6,18 @@ from datetime import datetime
 # Path
 from models.user_api_model import User, UserRegister
 from models.tweet_api_model import Tweet
+from models.db_model import UserDB, TweetDB
 
-from database import Base, engine
+from database import Base, engine, get_db
+
+# SQLAlchemy
+from sqlalchemy.orm import Session
 
 # Pydantic
 from pydantic import EmailStr
 
 # fastAPI
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi import status
 from fastapi import HTTPException
 from fastapi import Body, Path, Query
@@ -22,12 +26,9 @@ from fastapi import Body, Path, Query
 Base.metadata.create_all(engine)
 app = FastAPI()
 
-#Models
 
 # Path operations
-
 ## Users paths
-
 ### Register user
 @app.post(
     path='/signup',
@@ -36,7 +37,7 @@ app = FastAPI()
     summary="Register a User",
     tags=["Users"]
 )
-def sign_up(user: UserRegister = Body(...)):
+def sign_up(user: UserRegister = Body(...), db: Session = Depends(get_db)):
     """
     ## Sign up
 
@@ -53,8 +54,13 @@ def sign_up(user: UserRegister = Body(...)):
     - last_name: str
     - birthday: date
     """
-    insert_to_file(entity='users', body_parameter=user)
-    return user
+    
+    new_user = UserDB(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
 
 ### Login a user
 @app.post(
@@ -75,7 +81,7 @@ def login():
     summary="Show all Users",
     tags=["Users"]
 )
-def show_all_users():
+def show_all_users(db: Session = Depends(get_db)):
     """
     ## Show all users
 
@@ -91,23 +97,24 @@ def show_all_users():
     - last_name: str
     - birthday: date
     """
-    results = read_file(entity='users')
-    return results
+    users = db.query(UserDB).all()
+    return users
 
 ### Show a user
 @app.get(
-    path='/users/{user_id}',
+    path='/users/{id}',
     response_model=User,
     status_code=status.HTTP_200_OK,
     summary="Show a User",
     tags=["Users"]
 )
-def show_a_user(user_id: str = Path(
+def show_a_user(id: int = Path(
     ...,
-    min_length=1,
+    gt=0,
     title='User id',
     description="this is the user id. Minimum characters: 1"
-    )
+    ),
+    db: Session = Depends(get_db)
     ):
     """
     ## Show a user
@@ -125,31 +132,33 @@ def show_a_user(user_id: str = Path(
     - last_name: str
     - birthday: date
     """
-    results = read_file(entity='users')
 
-    for user in results:
-        if user['user_id'] == user_id:
-            return user
-    else:
+    user = db.query(UserDB).filter(
+        UserDB.id == id).first()
+
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="This user doesn't exist!"
             )
+    
+    return user
 
 ### Delete a user
 @app.delete(
-    path='/users/{user_id}/delete',
+    path='/users/{id}/delete',
     response_model=User,
     status_code=status.HTTP_200_OK,
     summary="Delete a User",
     tags=["Users"]
 )
-def delete_a_user(user_id: str = Path(
+def delete_a_user(id: int = Path(
     ...,
-    min_length=1,
+    gt=0,
     title='User id',
     description="this is the user id. Minimum characters: 1"
-    )
+    ),
+    db: Session = Depends(get_db)
     ):
     """
     ## Delete a user
@@ -167,30 +176,32 @@ def delete_a_user(user_id: str = Path(
     - last_name: str
     - birthday: date
     """
-    results = read_file(entity='users')
-    for user in results:
-        if user['user_id'] == user_id:
-            results.remove(user)
-            overwrite_file(entity='users', result_list=results)
-            return user
-    else:
+    user = db.query(UserDB).filter(
+        UserDB.id == id)
+
+    if not user.first():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This user doesn't exist!"
-        )        
+        )       
+
+    user.delete(synchronize_session=False)
+    db.commit()
+
+    return None
 
 ### Update a user
 @app.put(
-    path='/users/{user_id}/update',
+    path='/users/{id}/update',
     response_model=User,
     status_code=status.HTTP_200_OK,
     summary="Update a User",
     tags=["Users"]
 )
 def update_a_user(
-    user_id: str = Path(
+    id: int = Path(
     ...,
-    min_length=1,
+    gt=0,
     title='User id',
     description="this is the user id. Minimum characters: 1"
     ),
@@ -211,7 +222,9 @@ def update_a_user(
     email: Optional[EmailStr] = Query(
         default=None,
         title="Email",
-        description="This is the email of the user")
+        description="This is the email of the user"
+    ),
+    db: Session = Depends(get_db)
     ):
     """
     ## Update a user
@@ -234,22 +247,31 @@ def update_a_user(
     - birthday: date
     """
 
-    results = read_file(entity='users')
-    for user in results:
-        if user['user_id'] == user_id:
-            if first_name:
-                user['first_name'] = first_name
-            if last_name:
-                user['last_name'] = last_name
-            if email:
-                user['email'] = email
-            overwrite_file(entity='users', result_list=results)
-            return user
-    else:
+    user = db.query(UserDB).filter(
+        UserDB.id == id
+    )
+
+    if not user.first():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This user doesn't exist!"
         )
+    
+    if not first_name: first_name = user.first().first_name
+    if not last_name: last_name = user.first().last_name
+    if not email: email = user.first().email
+
+    user.update(
+        {
+            UserDB.first_name: first_name,
+            UserDB.last_name: last_name,    
+            UserDB.email: email
+        }
+    )
+
+    db.commit()
+
+    return None
     
 ## Tweets paths
 
