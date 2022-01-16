@@ -1,7 +1,7 @@
 # Python
 import json
 from typing import Optional, List
-from datetime import datetime
+from datetime import date
 
 # Path
 from models.user_api_model import User, UserRegister
@@ -23,6 +23,7 @@ from fastapi import HTTPException
 from fastapi import Body, Path, Query
 
 
+#Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 app = FastAPI()
 
@@ -147,7 +148,6 @@ def show_a_user(id: int = Path(
 ### Delete a user
 @app.delete(
     path='/users/{id}/delete',
-    response_model=User,
     status_code=status.HTTP_200_OK,
     summary="Delete a User",
     tags=["Users"]
@@ -271,7 +271,7 @@ def update_a_user(
 
     db.commit()
 
-    return None
+    return user.first()
     
 ## Tweets paths
 
@@ -310,7 +310,7 @@ def home():
     summary="Post a Tweet",
     tags=["Tweets"]
 )
-def post_tweet(tweet: Tweet = Body(...)):
+def post_tweet(tweet: Tweet = Body(...), db: Session = Depends(get_db)):
     """
     ## Post a Tweet
 
@@ -327,7 +327,15 @@ def post_tweet(tweet: Tweet = Body(...)):
     - updated_at: Optional[datetime]
     - by: User
     """
-    insert_to_file(entity='tweets', body_parameter=tweet)
+    # insert_to_file(entity='tweets', body_parameter=tweet)
+    new_tweet = tweet.dict()
+    new_tweet['user_id'] = 1 # TODO get current user\
+
+    new_tweet = TweetDB(**new_tweet)
+    db.add(new_tweet)
+    db.commit()
+    db.refresh(new_tweet)
+
     return tweet
 
 ### Show a tweet
@@ -338,12 +346,14 @@ def post_tweet(tweet: Tweet = Body(...)):
     summary="Show a Tweet",
     tags=["Tweets"]
 )
-def show_a_tweet(tweet_id: str = Path(
-     ...,
-    min_length=1,
-    title='Tweet id',
-    description="this is the tweet id. Minimum characters: 1"
-    )
+def show_a_tweet(
+    tweet_id: str = Path(
+        ..., 
+        min_length=1,
+        title='Tweet id',   
+        description="this is the tweet id. Minimum characters: 1"
+    ),
+    db: Session = Depends(get_db)
     ):
     """
     ## Show a tweet
@@ -361,31 +371,33 @@ def show_a_tweet(tweet_id: str = Path(
     - updated_at: datetime
     - by: user
     """
-    results = read_file(entity='tweets')
+    tweet = db.query(TweetDB).filter(
+        TweetDB.id == tweet_id
+    ).first()
 
-    for tweet in results:
-        if tweet['tweet_id'] == tweet_id:
-            return tweet
-    else:
+    if not tweet:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="This tweet doesn't exist!"
         )
 
+    return tweet
+
 ### Delete a tweet
 @app.delete(
     path='/tweets/{tweet_id}/delete',
-    response_model=Tweet,
     status_code=status.HTTP_200_OK,
     summary="Delete a Tweet",
     tags=["Tweets"]
 )
-def delete_a_tweet(tweet_id: str = Path(
-    ...,
-    min_length=1,
-    title='User id',
-    description="this is the tweet id. Minimum characters: 1"
-    )
+def delete_a_tweet(
+    tweet_id: str = Path(
+        ...,
+        min_length=1,
+        title='User id',
+        description="this is the tweet id. Minimum characters: 1"
+    ),
+    db: Session = Depends(get_db)
     ):
     """
     ## Delete a tweet
@@ -403,17 +415,19 @@ def delete_a_tweet(tweet_id: str = Path(
     - updated_at: datetime
     - by: user
     """
-    results = read_file(entity='tweets')
-    for tweet in results:
-        if tweet['tweet_id'] == tweet_id:
-            results.remove(tweet)
-            overwrite_file(entity='tweets', result_list=results)
-            return tweet
-    else:
+    tweet = db.query(TweetDB).filter(
+        TweetDB.id == tweet_id)
+
+    if not tweet.first():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This tweet doesn't exist!"
-        )    
+        )
+
+    tweet.delete(synchronize_session=False)
+    db.commit()
+
+    return None
 
 ### Update a tweet
 @app.put(
@@ -435,7 +449,8 @@ def update_a_tweet(tweet_id: str = Path(
         max_length=256,
         title="Tweet content",
         description="This is content of the tweet, minimum characters: 1"
-    )):
+    ),
+    db: Session = Depends(get_db)):
     """
     ## Update a tweet
 
@@ -455,48 +470,21 @@ def update_a_tweet(tweet_id: str = Path(
     - by: user
     """
 
-    results = read_file(entity='tweets')
-    for tweet in results:
-        if tweet['tweet_id'] == tweet_id:
-            if content:
-                tweet['content'] = content
-            tweet['updated_at'] = str(datetime.now())
-            print(tweet)
-            overwrite_file(entity='tweets', result_list=results)
-            return tweet
-    else:
+    tweet = db.query(TweetDB).filter(
+        TweetDB.id == tweet_id
+    )
+
+    if not tweet.first(): 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This tweet doesn't exist!"
         )
+    tweet.update(
+        {
+            TweetDB.content: content,
+            TweetDB.updated_at: str(date.today())
+        }
+    )
 
-def read_file(entity: str):
-    with open("repository/" + entity + '.json', 'r', encoding='utf-8') as f:
-        results = json.loads(f.read())
-    return results
-
-def overwrite_file(entity: str, result_list):
-    with open("repository/" + entity + '.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(result_list))
-
-def insert_to_file(entity: str, body_parameter: Tweet):
-    with open("repository/" + entity + '.json', 'r+', encoding='utf-8') as f:
-        results = json.loads(f.read()) # cast str -> json
-        json_dict = body_parameter.dict()
-        
-        if entity == 'tweets':
-            json_dict['tweet_id'] = str(json_dict['tweet_id']) # manual cast / fastapi can't cast uuid automatically
-            json_dict['created_at'] = str(json_dict['created_at']) # manual cast / fastapi can't cast date automatically
-
-            if len(str(json_dict['updated_at'])) > 0 :
-                json_dict['updated_at'] = str(json_dict['updated_at']) # manual cast / fastapi can't cast date automatically
-            json_dict['by']['user_id'] = str(json_dict['by']['user_id'])
-            json_dict['by']['birthday'] = str(json_dict['by']['birthday'])
-
-        else:
-            json_dict['user_id'] = str(json_dict['user_id']) # manual cast / fastapi can't cast uuid automatically
-            json_dict['birthday'] = str(json_dict['birthday'])
-        
-        results.append(json_dict)
-        f.seek(0) # start writing at the beginning like overwrite
-        f.write(json.dumps(results))
+    db.commit()
+    return tweet.first()

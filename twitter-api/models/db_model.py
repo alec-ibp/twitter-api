@@ -21,10 +21,11 @@ class TweetDB(Base):
 
     author = relationship("UserDB", back_populates="tweets")
 
-    def __init__(self, content, created_at, updated_at) -> None:
+    def __init__(self, content, created_at, updated_at, user_id) -> None:
         self.content = content
         self.created_at = created_at
         self.updated_at = updated_at
+        self.user_id = user_id
 
 
 class UserDB(Base):

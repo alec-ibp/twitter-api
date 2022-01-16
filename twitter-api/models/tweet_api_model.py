@@ -1,7 +1,6 @@
 # Python
-from uuid import UUID
 from typing import Optional
-from datetime import datetime
+from datetime import date
 
 # Path 
 from .user_api_model import User
@@ -11,14 +10,17 @@ from pydantic import BaseModel
 from pydantic import Field
 
 class Tweet(BaseModel):
-    tweet_id: UUID = Field(...)
+    
     content: str = Field(
         ...,
         min_length=1,
         max_length=256
     )
-    created_at: datetime = Field(default=datetime.now())
-    updated_at: Optional[datetime] = Field(default=None)
+    created_at: date = Field(default=date.today())
+    updated_at: Optional[date] = Field(default=None)
     # author
-    by: User = Field(...)
+    #by: User = Field(...)
+
+    class Config():
+        orm_mode = True
     
