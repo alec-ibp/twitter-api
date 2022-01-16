@@ -38,10 +38,9 @@ def home(db: Session = Depends(get_db), current_user: User = Depends(get_current
     ## Parameters:
   
     ## Returns a json list with all tweets in the app, with the following keys:
-    - tweet_id: UUID
     - content: str
-    - created_at: datetime
-    - updated_at: Optional[datetime]
+    - created_at: date
+    - updated_at: Optional[date]
     - by: User
     """
     tweets = db.query(TweetDB).all()
@@ -49,7 +48,7 @@ def home(db: Session = Depends(get_db), current_user: User = Depends(get_current
 
 ### Post a tweet
 @router.post(
-    path='/post',
+    path='/',
     response_model=Tweet,
     status_code=status.HTTP_201_CREATED,
     summary="Post a Tweet",
@@ -65,15 +64,14 @@ def post_tweet(tweet: Tweet = Body(...), db: Session = Depends(get_db)):
         - tweet: Tweet
 
     ## Returns a json with the tweet information (tweet model):
-    - tweet_id: UUID
     - content: str
-    - created_at: datetime
-    - updated_at: Optional[datetime]
+    - created_at: date
+    - updated_at: Optional[date]
     - by: User
     """
-    # insert_to_file(entity='tweets', body_parameter=tweet)
+
     new_tweet = tweet.dict()
-    new_tweet['user_id'] = 1 # TODO get current user\
+    new_tweet['user_id'] = 1 # TODO get current user
 
     new_tweet = TweetDB(**new_tweet)
     db.add(new_tweet)
@@ -101,17 +99,16 @@ def show_a_tweet(
     """
     ## Show a tweet
 
-    this path parameter show a tweet of the app by the tweet_id (UUID)
+    this path parameter show a tweet of the app by the tweet_id
 
     ## Parameters:
     - path parameter
         - tweet_id: str
     
     ## Returns a json with the basic tweet information (tweet model):
-    - tweet_id: UUID
     - content: str
-    - created_at: datetime
-    - updated_at: datetime
+    - created_at: date
+    - updated_at: date
     - by: user
     """
     tweet = db.query(TweetDB).filter(
@@ -128,7 +125,7 @@ def show_a_tweet(
 
 ### Delete a tweet
 @router.delete(
-    path='/{tweet_id}/delete',
+    path='/{tweet_id}',
     status_code=status.HTTP_200_OK,
     summary="Delete a Tweet",
 )
@@ -150,12 +147,7 @@ def delete_a_tweet(
     - path parameter:
         - tweet_id: str
     
-    ## Returns a json list with the following keys
-    - tweet_id: UUID
-    - content: str
-    - created_at: datetime
-    - updated_at: datetime
-    - by: user
+    ## Returns None
     """
     tweet = db.query(TweetDB).filter(
         TweetDB.id == tweet_id)
@@ -173,16 +165,17 @@ def delete_a_tweet(
 
 ### Update a tweet
 @router.put(
-    path='/{tweet_id}/update',
+    path='/{tweet_id}',
     response_model=Tweet,
     status_code=status.HTTP_200_OK,
     summary="Update a Tweet",
 )
-def update_a_tweet(tweet_id: str = Path(
-    ...,
-    min_length=1,
-    title='tweet id',
-    description="this is the tweet id. Minimum characters: 1"
+def update_a_tweet(
+    tweet_id: str = Path(
+        ...,
+        min_length=1,
+        title='tweet id',
+        description="this is the tweet id. Minimum characters: 1"
     ),
     content: Optional[str] = Query(
         default=None,
@@ -203,12 +196,7 @@ def update_a_tweet(tweet_id: str = Path(
     - query parameters:
         - content: str
     
-    ## Returns a json list following keys
-    - tweet_id: UUID
-    - content: str
-    - created_at: datetime
-    - updated_at: datetime
-    - by: user
+    ## Returns None
     """
 
     tweet = db.query(TweetDB).filter(
@@ -228,4 +216,4 @@ def update_a_tweet(tweet_id: str = Path(
     )
 
     db.commit()
-    return tweet.first()
+    return None

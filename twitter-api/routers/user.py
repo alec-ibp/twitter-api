@@ -2,11 +2,10 @@
 from typing import List, Optional
 
 # Path
-from models.user_api_model import User, UserRegister
+from models.user_api_model import User
 from models.db_model import UserDB
 
 from database import get_db
-from hashing import Hash
 
 # SQLAlchemy
 from sqlalchemy.orm import Session
@@ -25,8 +24,6 @@ router = APIRouter(
 )
 
 
-
-
 @router.get(
     path='/',
     response_model=List[User],
@@ -43,7 +40,6 @@ def show_all_users(db: Session = Depends(get_db)):
     
 
     ## Returns a json list with all the users in the app, with the following keys
-    - user_id: UUID
     - email: EmailStr
     - first_name: str
     - last_name: str
@@ -70,14 +66,13 @@ def show_a_user(id: int = Path(
     """
     ## Show a user
 
-    this path parameter show a user of the app by the user_id (UUID)
+    this path parameter show a user of the app by the user_id
 
     ## Parameters:
     - path parameter
         - user_id: str
     
     ## Returns a json with the basic user information (user model):
-    - user_id: UUID
     - email: EmailStr
     - first_name: str
     - last_name: str
@@ -97,7 +92,7 @@ def show_a_user(id: int = Path(
 
 
 @router.delete(
-    path='/{id}/delete',
+    path='/{id}',
     status_code=status.HTTP_200_OK,
     summary="Delete a User",
 )
@@ -118,12 +113,7 @@ def delete_a_user(id: int = Path(
     - path parameter:
         - user_id: str
     
-    ## Returns a json with the following keys
-    - user_id: UUID
-    - email: EmailStr
-    - first_name: str
-    - last_name: str
-    - birthday: date
+    ## Returns None
     """
     user = db.query(UserDB).filter(
         UserDB.id == id)
@@ -141,7 +131,7 @@ def delete_a_user(id: int = Path(
 
 ### Update a user
 @router.put(
-    path='/{id}/update',
+    path='/{id}',
     status_code=status.HTTP_200_OK,
     summary="Update a User",
 )
@@ -186,12 +176,7 @@ def update_a_user(
         - last_name: str
         -email: EmailStr
     
-    ## Returns a json list with the following keys
-    - user_id: UUID
-    - email: EmailStr
-    - first_name: str
-    - last_name: str
-    - birthday: date
+    ## Returns None
     """
 
     user = db.query(UserDB).filter(
