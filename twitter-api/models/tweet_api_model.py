@@ -23,4 +23,8 @@ class Tweet(BaseModel):
 
     class Config():
         orm_mode = True
+
+
+class ShowTweet(Tweet):
+    author: User = Field(...)
     

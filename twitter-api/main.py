@@ -1,11 +1,10 @@
 # Python
-import json
 from typing import Optional, List
 from datetime import date
 
 # Path
 from models.user_api_model import User, UserRegister
-from models.tweet_api_model import Tweet
+from models.tweet_api_model import Tweet, ShowTweet
 from models.db_model import UserDB, TweetDB
 
 from database import Base, engine, get_db
@@ -18,12 +17,10 @@ from pydantic import EmailStr
 
 # fastAPI
 from fastapi import FastAPI, Depends
-from fastapi import status
-from fastapi import HTTPException
 from fastapi import Body, Path, Query
+from fastapi import HTTPException, status
 
 
-#Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 app = FastAPI()
 
@@ -278,12 +275,12 @@ def update_a_user(
 ### Show all tweets
 @app.get(
     path='/',
-    response_model=List[Tweet],
+    response_model=List[ShowTweet],
     status_code=status.HTTP_200_OK,
     summary="Show all tweets",
     tags=['Tweets']
 )
-def home():
+def home(db: Session = Depends(get_db)):
     """
     ## Home app
 
@@ -298,9 +295,8 @@ def home():
     - updated_at: Optional[datetime]
     - by: User
     """
-    with open("repository/tweets.json",'r',encoding='utf-8') as f:
-        results = json.loads(f.read())
-    return results
+    tweets = db.query(TweetDB).all()
+    return tweets
 
 ### Post a tweet
 @app.post(
@@ -341,7 +337,7 @@ def post_tweet(tweet: Tweet = Body(...), db: Session = Depends(get_db)):
 ### Show a tweet
 @app.get(
     path='/tweets/{tweet_id}',
-    response_model=Tweet,
+    response_model=ShowTweet,
     status_code=status.HTTP_200_OK,
     summary="Show a Tweet",
     tags=["Tweets"]
