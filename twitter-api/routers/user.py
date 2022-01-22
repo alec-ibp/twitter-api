@@ -4,7 +4,6 @@ from typing import List, Optional
 # Path
 from models.user_api_model import User
 from repository import user
-
 from database import get_db
 
 # SQLAlchemy

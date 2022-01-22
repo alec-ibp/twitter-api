@@ -1,6 +1,5 @@
 # Python
 from typing import List, Optional
-from datetime import date
 
 # Path
 from models.user_api_model import User
