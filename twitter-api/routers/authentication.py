@@ -4,6 +4,8 @@ from models.user_api_model import User, UserRegister
 from database import get_db
 from hashing import Hash
 from JWT_token import create_access_token
+
+from repository import user
 # SQLAlchemy
 from sqlalchemy.orm import Session
 
@@ -49,10 +51,9 @@ def login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(
     status_code=status.HTTP_201_CREATED,
     summary="Register a User",
 )
-def sign_up(user: UserRegister = Body(...), db: Session = Depends(get_db)):
+def sign_up(new_user: UserRegister = Body(...), db: Session = Depends(get_db)):
     """
     ## Sign up
-
     This path operation Create a user in the app
 
     ## Parameters:
@@ -60,16 +61,9 @@ def sign_up(user: UserRegister = Body(...), db: Session = Depends(get_db)):
         - user: UserRegister
 
     ## Returns a json with the basic user information (user model):
-    - user_id: UUID
     - email: EmailStr
     - first_name: str
     - last_name: str
     - birthday: date
     """
-    user.password = Hash.hash_password(user.password)
-    new_user = UserDB(**user.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return new_user
+    return user.create(new_user, db)

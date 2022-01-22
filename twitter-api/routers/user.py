@@ -3,7 +3,7 @@ from typing import List, Optional
 
 # Path
 from models.user_api_model import User
-from models.db_model import UserDB
+from repository import user
 
 from database import get_db
 
@@ -15,7 +15,7 @@ from pydantic import EmailStr
 
 #FastAPI
 from fastapi import APIRouter, Depends
-from fastapi import Body, Path, Query, status, HTTPException
+from fastapi import Path, Query, status
 
 
 router = APIRouter(
@@ -29,15 +29,11 @@ router = APIRouter(
     response_model=List[User],
     status_code=status.HTTP_200_OK,
     summary="Show all Users",
-)
+    )
 def show_all_users(db: Session = Depends(get_db)):
     """
     ## Show all users
-
     This path operation show all the users in the app
-
-    ## Parameters:
-    
 
     ## Returns a json list with all the users in the app, with the following keys
     - email: EmailStr
@@ -45,8 +41,7 @@ def show_all_users(db: Session = Depends(get_db)):
     - last_name: str
     - birthday: date
     """
-    users = db.query(UserDB).all()
-    return users
+    return user.get_all(db)
 
 
 @router.get(
@@ -54,7 +49,7 @@ def show_all_users(db: Session = Depends(get_db)):
     response_model=User,
     status_code=status.HTTP_200_OK,
     summary="Show a User",
-)
+    )
 def show_a_user(id: int = Path(
     ...,
     gt=0,
@@ -65,7 +60,6 @@ def show_a_user(id: int = Path(
     ):
     """
     ## Show a user
-
     this path parameter show a user of the app by the user_id
 
     ## Parameters:
@@ -78,24 +72,14 @@ def show_a_user(id: int = Path(
     - last_name: str
     - birthday: date
     """
-
-    user = db.query(UserDB).filter(
-        UserDB.id == id).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="This user doesn't exist!"
-            )
-    
-    return user
+    return user.get(id, db)
 
 
 @router.delete(
     path='/{id}',
     status_code=status.HTTP_200_OK,
     summary="Delete a User",
-)
+    )
 def delete_a_user(id: int = Path(
     ...,
     gt=0,
@@ -106,7 +90,6 @@ def delete_a_user(id: int = Path(
     ):
     """
     ## Delete a user
-
     This path operation delete a user from the database
 
     ## Parameters:
@@ -115,26 +98,14 @@ def delete_a_user(id: int = Path(
     
     ## Returns None
     """
-    user = db.query(UserDB).filter(
-        UserDB.id == id)
+    return user.delete(id, db)
 
-    if not user.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user doesn't exist!"
-        )       
 
-    user.delete(synchronize_session=False)
-    db.commit()
-
-    return None
-
-### Update a user
 @router.put(
     path='/{id}',
     status_code=status.HTTP_200_OK,
     summary="Update a User",
-)
+    )
 def update_a_user(
     id: int = Path(
     ...,
@@ -165,7 +136,6 @@ def update_a_user(
     ):
     """
     ## Update a user
-
     This path operation Update a user
 
     ## Parameters:
@@ -174,33 +144,9 @@ def update_a_user(
     - query parameters:
         - first_name: str
         - last_name: str
-        -email: EmailStr
+        - email: EmailStr
     
     ## Returns None
     """
 
-    user = db.query(UserDB).filter(
-        UserDB.id == id
-    )
-
-    if not user.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user doesn't exist!"
-        )
-    
-    if not first_name: first_name = user.first().first_name
-    if not last_name: last_name = user.first().last_name
-    if not email: email = user.first().email
-
-    user.update(
-        {
-            UserDB.first_name: first_name,
-            UserDB.last_name: last_name,    
-            UserDB.email: email
-        }
-    )
-
-    db.commit()
-
-    return None
+    user.update(id, first_name, last_name, email, db)

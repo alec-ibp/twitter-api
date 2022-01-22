@@ -5,8 +5,8 @@ from datetime import date
 # Path
 from models.user_api_model import User
 from models.tweet_api_model import Tweet, ShowTweet
-from models.db_model import TweetDB
 from database import get_db
+from repository import tweet
 from oauth2 import get_current_user
 
 
@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 #FastAPI
 from fastapi import APIRouter, Depends
-from fastapi import Body, Path, Query, status, HTTPException
+from fastapi import Body, Path, Query, status
 
 
 router = APIRouter(
@@ -32,31 +32,30 @@ router = APIRouter(
 def home(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     ## Home app
-
     This path operation show all tweets in the app
 
-    ## Parameters:
-  
     ## Returns a json list with all tweets in the app, with the following keys:
     - content: str
     - created_at: date
     - updated_at: Optional[date]
     - by: User
     """
-    tweets = db.query(TweetDB).all()
-    return tweets
+    return tweet.get_all(db)
 
-### Post a tweet
+
 @router.post(
     path='/',
     response_model=Tweet,
     status_code=status.HTTP_201_CREATED,
     summary="Post a Tweet",
-)
-def post_tweet(tweet: Tweet = Body(...), db: Session = Depends(get_db)):
+    )
+def post_tweet(
+    new_tweet: Tweet = Body(...), 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+    ):
     """
     ## Post a Tweet
-
     This path operation Create a tweet in the app
 
     ## Parameters:
@@ -69,24 +68,15 @@ def post_tweet(tweet: Tweet = Body(...), db: Session = Depends(get_db)):
     - updated_at: Optional[date]
     - by: User
     """
+    return tweet.create(new_tweet, current_user, db)
 
-    new_tweet = tweet.dict()
-    new_tweet['user_id'] = 1 # TODO get current user
 
-    new_tweet = TweetDB(**new_tweet)
-    db.add(new_tweet)
-    db.commit()
-    db.refresh(new_tweet)
-
-    return tweet
-
-### Show a tweet
 @router.get(
     path='/{tweet_id}',
     response_model=ShowTweet,
     status_code=status.HTTP_200_OK,
     summary="Show a Tweet",
-)
+    )
 def show_a_tweet(
     tweet_id: str = Path(
         ..., 
@@ -94,11 +84,11 @@ def show_a_tweet(
         title='Tweet id',   
         description="this is the tweet id. Minimum characters: 1"
     ),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
     ):
     """
     ## Show a tweet
-
     this path parameter show a tweet of the app by the tweet_id
 
     ## Parameters:
@@ -111,24 +101,14 @@ def show_a_tweet(
     - updated_at: date
     - by: user
     """
-    tweet = db.query(TweetDB).filter(
-        TweetDB.id == tweet_id
-    ).first()
+    return tweet.get(tweet_id, db)
 
-    if not tweet:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="This tweet doesn't exist!"
-        )
 
-    return tweet
-
-### Delete a tweet
 @router.delete(
     path='/{tweet_id}',
     status_code=status.HTTP_200_OK,
     summary="Delete a Tweet",
-)
+    )
 def delete_a_tweet(
     tweet_id: str = Path(
         ...,
@@ -136,11 +116,11 @@ def delete_a_tweet(
         title='User id',
         description="this is the tweet id. Minimum characters: 1"
     ),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
     ):
     """
     ## Delete a tweet
-
     This path operation delete a tweet from the database
 
     ## Parameters:
@@ -149,27 +129,15 @@ def delete_a_tweet(
     
     ## Returns None
     """
-    tweet = db.query(TweetDB).filter(
-        TweetDB.id == tweet_id)
+    return tweet.delete(tweet_id, db)
 
-    if not tweet.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This tweet doesn't exist!"
-        )
 
-    tweet.delete(synchronize_session=False)
-    db.commit()
-
-    return None
-
-### Update a tweet
 @router.put(
     path='/{tweet_id}',
     response_model=Tweet,
     status_code=status.HTTP_200_OK,
     summary="Update a Tweet",
-)
+    )
 def update_a_tweet(
     tweet_id: str = Path(
         ...,
@@ -184,10 +152,11 @@ def update_a_tweet(
         title="Tweet content",
         description="This is content of the tweet, minimum characters: 1"
     ),
-    db: Session = Depends(get_db)):
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+    ):
     """
     ## Update a tweet
-
     This path operation Update a tweet
 
     ## Parameters:
@@ -198,22 +167,4 @@ def update_a_tweet(
     
     ## Returns None
     """
-
-    tweet = db.query(TweetDB).filter(
-        TweetDB.id == tweet_id
-    )
-
-    if not tweet.first(): 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This tweet doesn't exist!"
-        )
-    tweet.update(
-        {
-            TweetDB.content: content,
-            TweetDB.updated_at: str(date.today())
-        }
-    )
-
-    db.commit()
-    return None
+    return tweet.update(tweet_id, content, db)
