@@ -1,8 +1,7 @@
 # OPath
 from models.user_api_model import UserRegister
 from models.db_model import UserDB
-from hashing import Hash
-
+from utils.hashing import Hash
 # SQLAlchemy
 from sqlalchemy.orm import Session
 

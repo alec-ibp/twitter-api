@@ -2,8 +2,8 @@
 from models.db_model import UserDB
 from models.user_api_model import User, UserRegister
 from database import get_db
-from hashing import Hash
-from JWT_token import create_access_token
+from utils.hashing import Hash
+from utils.JWT_token import create_access_token
 
 from repository import user
 # SQLAlchemy

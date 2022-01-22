@@ -1,7 +1,8 @@
 # Path
 from models.db_model import UserDB
 from database import get_db
-from JWT_token import verify_token
+from .JWT_token import verify_token
+
 
 #SQLAlchemy
 from sqlalchemy.orm import Session

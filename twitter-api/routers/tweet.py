@@ -6,7 +6,7 @@ from models.user_api_model import User
 from models.tweet_api_model import Tweet, ShowTweet
 from database import get_db
 from repository import tweet
-from oauth2 import get_current_user
+from utils.oauth2 import get_current_user
 
 
 # SQLAlchemy
